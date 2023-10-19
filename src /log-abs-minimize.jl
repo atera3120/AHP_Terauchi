@@ -5,7 +5,7 @@ import HiGHS
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 
-function LogAbsErrMin(A::Matrix{T})::T where {T <: Real}
+function LogAbsErrMin(A::Matrix{T})::Array{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     if !isCrispPCM(A)
@@ -36,11 +36,11 @@ function LogAbsErrMin(A::Matrix{T})::T where {T <: Real}
         @objective(model, Min, ∑∑Uᵢⱼ)
 
         optimize!(model)
-        temp = exp.(value.(u))
-        optimalValue = temp/sum(temp)
+        exp_conv_array = exp.(value.(u))
+        Σexp_conv = sum(exp_conv_array)
 
         return (
-            optimalValue=optimalValue
+            W = exp_conv_array / Σexp_conv
         )
     
     finally
