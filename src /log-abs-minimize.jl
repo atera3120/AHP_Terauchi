@@ -26,8 +26,8 @@ function LogAbsErrMin(A::Matrix{T})::Array{T} where {T <: Real}
             for j = i+1:n
                 uᵢ = u[i]; uⱼ = u[j]; Uᵢⱼ = U[i,j]
                 aᵢⱼ = A[i,j]
-                @constraint(model, log(ℯ, aᵢⱼ) - uᵢ + uⱼ <= Uᵢⱼ)
-                @constraint(model, -log(ℯ, aᵢⱼ) + uᵢ - uⱼ <= Uᵢⱼ)
+                @constraint(model, log(aᵢⱼ) - uᵢ + uⱼ <= Uᵢⱼ)
+                @constraint(model, -log(aᵢⱼ) + uᵢ - uⱼ <= Uᵢⱼ)
                 ∑∑Uᵢⱼ += Uᵢⱼ
             end
         end
