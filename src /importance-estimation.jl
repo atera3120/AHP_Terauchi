@@ -1,11 +1,12 @@
 using IntervalArithmetic
+using LinearAlgebra
 using JuMP
 import HiGHS
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 
-function LogAbsErrMin(A::Matrix{T})::Array{T} where {T <: Real}
+function AD-method(A::Matrix{T})::Array{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     if !isCrispPCM(A)
@@ -39,12 +40,47 @@ function LogAbsErrMin(A::Matrix{T})::Array{T} where {T <: Real}
         exp_conv_array = exp.(value.(u))
         Σexp_conv = sum(exp_conv_array)
 
-        return (
-            W = exp_conv_array / Σexp_conv
-        )
+        return W = exp_conv_array / Σexp_conv
     
     finally
         # エラー終了時にも変数などを消去する
         empty!(model)    
     end
+end
+
+function EV-method(A::Matrix{T})::Array{T} where {T <: Real}
+    ε = 1e-8 # << 1
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    eigen_result = eigen(A)
+    λₘₐₓ = maximum(real(eigen_result.values))
+    idxₘₐₓ = argmax(real(eigen_result.values))
+    vₘₐₓ = eigen_result.vectors[:, idx_max]
+
+    return W = vₘₐₓ / sum(vₘₐₓ)
+
+end
+
+function GM-method(A::Matrix{T})::Array{T} where {T <: Real}
+    m, n = size(A)
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    S = 0
+    for i = 1:n
+        S += prod(A[i, :])^(1/n)
+    end
+
+    w = similar(A, T, n)
+    for i = 1:n
+        w[i] = prod(A[i, :])^(1/n) / S
+    end
+
+    return W = w
+
 end
