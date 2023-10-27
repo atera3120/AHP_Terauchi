@@ -76,15 +76,22 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             insert!(W, k, 1.0)
             Wᶜ[:, k] = W
         end
+        print("phase1")
 
         # Phase 2
         d_star = T[]
         for k = 1:n
             @variable(model, l[i=1:n] ≥ ε)
-            @variable(model, μₖ)
+            @variable(model, 0<=μₖ<=1)
+            print("phase2-1")
             # 配列Mをμₖで定義し、k番目だけ1-μₖに設定
             μ = fill(μₖ, n)
-            μ[k] = 1-μₖ
+            # print(typeof(μₖ))
+            # print(typeof(μ))
+            print("A")
+            μ[k] = μₖ
+            print("B")
+            print("phase2-1-2")
             
             d_kbar = 0
             for j = 1:n
@@ -92,13 +99,21 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
                 sum_minus = 0
                 for i = filter(i -> j != i, 1:n)
                     aᵢⱼ = A[i,j]
+                    print("phase2-1-3")
                     @constraint(model, aᵢⱼ*(μ[j]*Wᶜ[j,k]-l[j]) ≤ μ[i]*Wᶜ[i,k]+l[i])
+                    print("phase2-2")
+
                     sum_plus += μ[i]*Wᶜ[i,k] + l[i]
                     sum_minus += μ[i]*Wᶜ[i,k] - l[i]
                 end
                 @constraint(model, sum_plus + μ[j]*Wᶜ[j,k] - l[j] ≥ 1)
+                print("phase2-3")
+
                 @constraint(model, sum_minus + μ[j]*Wᶜ[j,k] + l[j] ≤ 1)
+                print("phase2-4")
+
                 @constraint(model, μ[j]*Wᶜ[j,k] - l[j] ≥ 0)
+                print("phase2-5")
                 
                 if j != k
                     d_kbar = l[j]
@@ -108,6 +123,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             optimize!(model)
             d_star[k] = value.d_kbar
         end
+        print("phase2")
 
         # Phase 3
         μ_star = T[]
@@ -137,7 +153,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
                     d_kbar = l[j]
                 end
             end
-            @constraint(model, d_kbar = d_star[k])
+            @constraint(model, d_kbar == d_star[k])
             @objective(model, Min, l[k])
             optimize!(model)
             μ_star = value.μₖ
