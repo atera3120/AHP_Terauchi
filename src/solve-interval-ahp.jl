@@ -121,7 +121,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             end
             @objective(model, Min, d_kbar)
             optimize!(model)
-            d_star[k] = value.d_kbar
+            d_star[k] = sum(map(i -> l[i], filter(i -> k != i, 1:n)))
         end
         print("phase2")
 
@@ -156,8 +156,8 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             @constraint(model, d_kbar == d_star[k])
             @objective(model, Min, l[k])
             optimize!(model)
-            μ_star = value.μₖ
-            l_star = value.l'
+            μ_star = μₖ.value
+            l_star = (l.value)'
 
 
             for i = 1:n

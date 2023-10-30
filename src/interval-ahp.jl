@@ -10,7 +10,7 @@ LPResult_Individual = @NamedTuple{
     wᴸ::Vector{T}, wᵁ::Vector{T},
     W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
     optimalValue::T
-    } where {T <: Real}
+} where {T <: Real}
 
 function solveIntervalAHPLP(A::Matrix{T})::LPResult_Individual{T} where {T <: Real}
     ε = 1e-8 # << 1
