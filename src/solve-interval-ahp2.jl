@@ -6,11 +6,10 @@ include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 include("./importance-estimation.jl")
 
-# 区間重要度の中心を
 
 LPResult_Individual = @NamedTuple{
     # 区間重みベクトル
-    w̅̅ᴸ::Vector{T}, w̅̅ᵁ::Vector{T},
+    wᴸ::Vector{T}, wᵁ::Vector{T},
     W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
 } where {T <: Real}
 
@@ -49,7 +48,6 @@ function phase1_test(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real
 end
 
 function phase2_test(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real}
-    # FIXME:CI=0の行列では第１要素以外が０になる
     ε = 1e-8 # << 1
 
     Wᶜ = phase1_test(A, method) # phase1の動作は確認済
@@ -110,7 +108,6 @@ function phase2_test(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real
             optimize!(model)
             dₖ⃰ = sum(map(j -> value.(l[j]), filter(j -> j != k, 1:n)))
             d⃰[k] = dₖ⃰
-            print(value.(l))
             
         finally
             empty!(model)
@@ -121,7 +118,7 @@ function phase2_test(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real
 end
 
 function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
-
+# HACK:長すぎる。関数に切り分け
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
     end
@@ -141,6 +138,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
     end
 
     # Phase 2
+    # FIXME:どの手法でも第1要素以外が0になる（CI=0の行列において）
     d⃰ = Vector{T}(undef, n) # 各kでの最適値を格納
     for k = 1:n
 
@@ -201,6 +199,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
     end
 
     # Phase 3
+    # FIXME:ADのときのみwᴸ=0
     wᴸ = Matrix{T}(undef, m, n)
     wᵁ = Matrix{T}(undef, m, n)
     for k = 1:n
@@ -248,13 +247,13 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
             @constraint(model, (1-μₖ)-lₖ ≥ ε)
             Σl = sum(map(j-> l[j], filter(j -> j != k, 1:n)))
-            @constraint(model, Σl = d⃰[k])
+            @constraint(model, Σl == d⃰[k])
 
             dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
             @objective(model, Min, l[k])
 
             optimize!(model)
-            μₖ⃰ = value.μₖ
+            μₖ⃰ = value.(μₖ)
             l⃰ = value.(l)
             
             for i = 1:n
@@ -280,18 +279,19 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
     # Phase 4
     w̅̅ᴸ = Vector{T}(undef, n)
     w̅̅ᵁ = Vector{T}(undef, n)
-    W = Vector{Interval{T}}(undef, n)
+    W̅̅ = Vector{Interval{T}}(undef, n)
 
     for i = 1:n
-        w̅̅ᴸ[i] = min(wᴸ[i, :])
-        w̅̅ᵁ[i] = max(wᵁ[i, :])
-        W[i] = map(i -> (w̅̅ᴸ[i])..(w̅̅ᵁ[i]), 1:n)
+        w̅̅ᴸ[i] = minimum(wᴸ[i, :])
+        w̅̅ᵁ[i] = maximum(wᵁ[i, :])
+        W̅̅[i] = (w̅̅ᴸ[i])..(w̅̅ᵁ[i])
     end
 
     return (
-        wᴸ=wᴸ, wᵁ=wᵁ,
-        W=W
+        wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,
+        W=W̅̅
     )
+
 
 end
 
