@@ -25,7 +25,7 @@ function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <:
     return result_matrix
 end
 
-function phase1_test(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
+function phase1_test(A::Matrix{T}, method::Function, n::Int)::Matrix{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -47,134 +47,77 @@ function phase1_test(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real
     return Wᶜ
 end
 
-function phase2_jump()
+# Phase2のループの中の部分
+function phase2_jump(Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+    ε = 1e-8 # << 1
+
     model = Model(HiGHS.Optimizer)
     set_silent(model)
 
-        try
-            @variable(model, l[i=1:n] ≥ ε)
-            @variable(model, ε<=μₖ<=1-ε)
-            lₖ = l[k]
-            
-            for j = filter(j -> j != k, 1:n)
-                for i = filter(i -> i != j, 1:n)
-                    aᵢⱼ = A[i,j]
-                    wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
-                    lᵢ = l[i]; lⱼ = l[j]
-                    @constraint(model, aᵢⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ μₖ*wᵢᶜ+lᵢ)
-                end
+    try
+        @variable(model, l[i=1:n] ≥ ε)
+        @variable(model, ε<=μₖ<=1-ε)
+        lₖ = l[k]
+        
+        for j = filter(j -> j != k, 1:n)
+            for i = filter(i -> i != j, 1:n)
+                aᵢⱼ = A[i,j]
+                wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
+                lᵢ = l[i]; lⱼ = l[j]
+                @constraint(model, aᵢⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ μₖ*wᵢᶜ+lᵢ)
             end
+        end
 
-            for i = filter(i -> i != k, 1:n)
-                aᵢₖ = A[i,k]
-                lᵢ = l[i]
-                wᵢᶜ = Wᶜ[i,k]
-                @constraint(model, aᵢₖ*(1-μₖ-lₖ) ≤ μₖ*wᵢᶜ+lᵢ)
-                @constraint(model, μₖ*wᵢᶜ - lᵢ ≥ ε)
-            end
+        for i = filter(i -> i != k, 1:n)
+            aᵢₖ = A[i,k]
+            lᵢ = l[i]
+            wᵢᶜ = Wᶜ[i,k]
+            @constraint(model, aᵢₖ*(1-μₖ-lₖ) ≤ μₖ*wᵢᶜ+lᵢ)
+            @constraint(model, μₖ*wᵢᶜ - lᵢ ≥ ε)
+        end
 
-            for j = filter(j -> j != k, 1:n)
-                lⱼ = l[j]; lₖ = l[k]
-                wⱼᶜ = Wᶜ[j,k];
-                # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
-                # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-                Sᵁ = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != j && i != k, 1:n)))
-                Sᴸ = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != j && i != k, 1:n)))
-                @constraint(model, (1-μₖ)+lₖ + Sᵁ + μₖ*wⱼᶜ-lⱼ ≥ 1)
-                @constraint(model, (1-μₖ)-lₖ + Sᴸ + μₖ*wⱼᶜ+lⱼ ≤ 1)
-            end
+        for j = filter(j -> j != k, 1:n)
+            lⱼ = l[j]; lₖ = l[k]
+            wⱼᶜ = Wᶜ[j,k];
+            # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
+            # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
+            Sᵁ = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != j && i != k, 1:n)))
+            Sᴸ = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != j && i != k, 1:n)))
+            @constraint(model, (1-μₖ)+lₖ + Sᵁ + μₖ*wⱼᶜ-lⱼ ≥ 1)
+            @constraint(model, (1-μₖ)-lₖ + Sᴸ + μₖ*wⱼᶜ+lⱼ ≤ 1)
+        end
 
-            # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
-            # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ_dash = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != k, 1:n)))
-            Sᴸ_dash = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != k, 1:n)))
-            @constraint(model, Sᵁ_dash + (1-μₖ)-lₖ ≥ 1)
-            @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
-            @constraint(model, (1-μₖ)-lₖ ≥ ε)
+        # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
+        # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
+        Sᵁ_dash = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != k, 1:n)))
+        Sᴸ_dash = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != k, 1:n)))
+        @constraint(model, Sᵁ_dash + (1-μₖ)-lₖ ≥ 1)
+        @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
+        @constraint(model, (1-μₖ)-lₖ ≥ ε)
 
-            dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
-            @objective(model, Min, dₖ)
+        dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
+        @objective(model, Min, dₖ)
 
-            optimize!(model)
-            dₖ⃰ = sum(map(j -> value.(l[j]), filter(j -> j != k, 1:n)))
-            d⃰[k] = dₖ⃰
-            
-        finally
-            empty!(model)
-        end  
+        optimize!(model)
+        dₖ⃰ = sum(map(j -> value.(l[j]), filter(j -> j != k, 1:n)))
+        return dₖ⃰
+        
+    finally
+        empty!(model)
+    end
+end
 
 function phase2_test(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     Wᶜ = phase1_test(A, method) # phase1の動作は確認済
     m, n = size(A)
-    # modelの定義はループの外に置いていても大丈夫なのか？ループの中に入れるべき？
    
     # Phase 2
     d⃰ = Vector{T}(undef, n) 
     for k = 1:n
-
-        model = Model(HiGHS.Optimizer)
-        set_silent(model)
-
-        try
-            @variable(model, l[i=1:n] ≥ ε)
-            @variable(model, ε<=μₖ<=1-ε)
-            lₖ = l[k]
-            
-            for j = filter(j -> j != k, 1:n)
-                for i = filter(i -> i != j, 1:n)
-                    aᵢⱼ = A[i,j]
-                    wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
-                    lᵢ = l[i]; lⱼ = l[j]
-                    @constraint(model, aᵢⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ μₖ*wᵢᶜ+lᵢ)
-                end
-            end
-
-            for i = filter(i -> i != k, 1:n)
-                aᵢₖ = A[i,k]
-                lᵢ = l[i]
-                wᵢᶜ = Wᶜ[i,k]
-                @constraint(model, aᵢₖ*(1-μₖ-lₖ) ≤ μₖ*wᵢᶜ+lᵢ)
-                @constraint(model, μₖ*wᵢᶜ - lᵢ ≥ ε)
-            end
-
-            for j = filter(j -> j != k, 1:n)
-                lⱼ = l[j]; lₖ = l[k]
-                wⱼᶜ = Wᶜ[j,k];
-                # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
-                # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-                Sᵁ = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != j && i != k, 1:n)))
-                Sᴸ = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != j && i != k, 1:n)))
-                @constraint(model, (1-μₖ)+lₖ + Sᵁ + μₖ*wⱼᶜ-lⱼ ≥ 1)
-                @constraint(model, (1-μₖ)-lₖ + Sᴸ + μₖ*wⱼᶜ+lⱼ ≤ 1)
-            end
-
-            # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
-            # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ_dash = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != k, 1:n)))
-            Sᴸ_dash = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != k, 1:n)))
-            @constraint(model, Sᵁ_dash + (1-μₖ)-lₖ ≥ 1)
-            @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
-            @constraint(model, (1-μₖ)-lₖ ≥ ε)
-
-            dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
-            @objective(model, Min, dₖ)
-
-            optimize!(model)
-            dₖ⃰ = sum(map(j -> value.(l[j]), filter(j -> j != k, 1:n)))
-            
-            d⃰[k] = dₖ⃰
-            println(k)
-            println(value.(l))
-            println(dₖ⃰)
-            
-        finally
-            empty!(model)
-        end
-        
+        d⃰[k] = phase2_jump(Wᶜ, k, n)
     end
-    
 
     return d⃰
 end

@@ -83,3 +83,17 @@ function GM(A::Matrix{T})::Array{T} where {T <: Real}
     return W = w
 
 end
+
+function CI(A::Matrix{T})::T where {T <: Real}
+    m, n = size(A)
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    λₘₐₓ = maximum(real(eigen(A).values))
+
+    return CI = (λₘₐₓ - n) / (n - 1)
+
+end
+    
