@@ -122,19 +122,19 @@ function phase2_jump(Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
     end
 end
 
-function phase2(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real}
+# function phase2(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real}
 
-    Wᶜ = phase1(A, method) # phase1の動作は確認済
-    m, n = size(A)
+#     Wᶜ = phase1(A, method) # phase1の動作は確認済
+#     m, n = size(A)
    
-    # Phase 2
-    d⃰ = Vector{T}(undef, n) 
-    for k = 1:n
-        d⃰[k] = phase2_jump(Wᶜ, k, n)
-    end
+#     # Phase 2
+#     d⃰ = Vector{T}(undef, n) 
+#     for k = 1:n
+#         d⃰[k] = phase2_jump(Wᶜ, k, n)
+#     end
 
-    return d⃰
-end
+#     return d⃰
+# end
 
 # Phase3の戻り値
 phase3_jump_result = @NamedTuple{
@@ -215,7 +215,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
     end
 end
 
-
+# 提案手法
 function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
