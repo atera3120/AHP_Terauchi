@@ -200,7 +200,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 
         optimize!(model)
         μₖ⃰ = value.(μₖ)
-        l⃰ = value.(l) # ここが負だったら０にする必要がある
+        l⃰ = value.(l) 
         return (
             μₖ⃰ = μₖ⃰ ,
             l⃰ = l⃰
