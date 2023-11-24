@@ -33,9 +33,9 @@ end
 # Q値
 function calculate_Q(T, E)
     TcapE = T .∩ E
-    if isempty(TcapE)
-        return 1.0
-    end
+    # if isempty(TcapE)
+    #     return 1.0
+    # end
     Q = c_diam.(TcapE) ./ c_diam.(T)
     return Q
 end

@@ -239,9 +239,13 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             lᵢ⃰ = l⃰[i]
             wᵢᶜ = Wᶜ[i,k]
             if i==k
+                # wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰/(1-μₖ⃰ )
+                # wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰/(1-μₖ⃰ )
                 wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰
                 wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰
             else
+                # wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰/(μₖ⃰ *wᵢᶜ)
+                # wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰/(μₖ⃰ *wᵢᶜ)
                 wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰
                 wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰
             end
