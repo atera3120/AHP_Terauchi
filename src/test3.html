@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>log-abs-minimize</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>test3</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -15219,21 +15219,11 @@ body[data-format='mobile'] .jp-OutputArea-child .jp-OutputArea-output {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="10-/-20-%E3%82%BC%E3%83%9F">10 / 20 &#12476;&#12511;<a class="anchor-link" href="#10-/-20-%E3%82%BC%E3%83%9F">&#182;</a></h1>
-</div>
-</div>
-</div>
-</div>
-<div  class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>中心推定はAMRWが最も精度よく推定できることが分かっている。
-MMR法の推定について、従来法と異なるアプローチを検討する。</p>
-<p>【内容】
-対数空間で絶対偏差を最小化し、重み推定を行うプログラムを作成した。</p>
+<h1 id="11/17-%E3%82%BC%E3%83%9F">11/17 &#12476;&#12511;<a class="anchor-link" href="#11/17-%E3%82%BC%E3%83%9F">&#182;</a></h1><p><em>シミュレーション</em></p>
+<ul>
+<li>真の区間重要度に対してA, B, C, D, E 各手法で1000ずつ一対比較行列を取る</li>
+<li>1000個の区間AHPを解き、それぞれの指標を算出した</li>
+</ul>
 
 </div>
 </div>
@@ -15245,18 +15235,57 @@ MMR法の推定について、従来法と異なるアプローチを検討す�
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>$$
-\begin{align*}
-\operatorname{minimize} ~~ &amp; ~~
-\sum_{i \in N} \sum_{j &lt; i} U_{ij}, \\
-\text{subject to} ~~ &amp; ~~
-\ln \left( a_{ij} \right) - u_i + u_j \leq U_{ij}, &amp;&amp;
-i \in N, ~~ &amp; j&lt;i \\ &amp; ~~
-u_i - u_j -\ln \left( a_{ij} \right) \leq U_{ij}, &amp;&amp;
-i \in N, ~~ &amp; j&lt;i \\ &amp; ~~
-u_i \in \mathbb{R}.
-\end{align*}
-$$</p>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">N=5</th>
+  <th style="text-align:left">EV</th>
+  <th style="text-align:left">A</th>
+  <th style="text-align:left">B</th>
+  <th style="text-align:left">C</th>
+  <th style="text-align:left">D</th>
+  <th style="text-align:left">E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">P_ave</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.44319</td>
+  <td style="text-align:left">0.39936</td>
+  <td style="text-align:left">0.42855</td>
+  <td style="text-align:left">0.44626</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">Q_ave</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.86888</td>
+  <td style="text-align:left">0.91659</td>
+  <td style="text-align:left">0.89502</td>
+  <td style="text-align:left">0.87318</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">R_ave</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.48545</td>
+  <td style="text-align:left">0.41916</td>
+  <td style="text-align:left">0.45947</td>
+  <td style="text-align:left">0.48897</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">S_ave</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.59332</td>
+  <td style="text-align:left">0.54614</td>
+  <td style="text-align:left">0.57781</td>
+  <td style="text-align:left">0.59569</td>
+</tr>
+</tbody>
+</table>
 
 </div>
 </div>
@@ -15268,7 +15297,57 @@ $$</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>where $u_i = \ln \left( w_i \right), ~ U_{ij} = \left| \ln \left( a_{ij} \right) - u_i + u_j \right|, ~ i \in N$</p>
+<table>
+<thead>
+<tr>
+  <th style="text-align:left">N=5</th>
+  <th style="text-align:left">EV</th>
+  <th style="text-align:left">A</th>
+  <th style="text-align:left">B</th>
+  <th style="text-align:left">C</th>
+  <th style="text-align:left">D</th>
+  <th style="text-align:left">E</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">P_var</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.03131</td>
+  <td style="text-align:left">0.03542</td>
+  <td style="text-align:left">0.0328</td>
+  <td style="text-align:left">0.03205</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">Q_var</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.03847</td>
+  <td style="text-align:left">0.0319</td>
+  <td style="text-align:left">0.03468</td>
+  <td style="text-align:left">0.03881</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">R_var</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.04308</td>
+  <td style="text-align:left">0.04262</td>
+  <td style="text-align:left">0.04323</td>
+  <td style="text-align:left">0.04427</td>
+</tr>
+<tr>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">S_var</td>
+  <td style="text-align:left"></td>
+  <td style="text-align:left">0.02986</td>
+  <td style="text-align:left">0.03456</td>
+  <td style="text-align:left">0.03155</td>
+  <td style="text-align:left">0.03096</td>
+</tr>
+</tbody>
+</table>
 
 </div>
 </div>
@@ -15280,9 +15359,7 @@ $$</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>最適解から、
-$$w_i = \lambda \exp \left( u_i \right)$$
-として求められるが、総和が１になるように定める。</p>
+<p>実験に用いたコードは以下の通り</p>
 
 </div>
 </div>
@@ -15295,7 +15372,11 @@ $$w_i = \lambda \exp \left( u_i \right)$$
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">LaTeXStrings</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="c"># import Pkg</span>
+<span class="c"># Pkg.add(&quot;DataFrames&quot;)</span>
+<span class="c"># Pkg.add(&quot;CSV&quot;)</span>
+<span class="c"># Pkg.add(&quot;IntervalSets&quot;)</span>
+<span class="c"># Pkg.add(&quot;LatexStrings&quot;)</span>
 </pre></div>
 
      </div>
@@ -15311,54 +15392,18 @@ $$w_i = \lambda \exp \left( u_i \right)$$
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">include</span><span class="p">(</span><span class="s">&quot;./display/display-crisp-matrix.jl&quot;</span><span class="p">)</span>
-<span class="n">include</span><span class="p">(</span><span class="s">&quot;./display/display-interval-vector.jl&quot;</span><span class="p">)</span>
-<span class="n">include</span><span class="p">(</span><span class="s">&quot;./display/display-vector.jl&quot;</span><span class="p">)</span>
-<span class="n">include</span><span class="p">(</span><span class="s">&quot;./log-abs-minimize.jl&quot;</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-
-
-<div class="jp-RenderedText jp-OutputArea-output " data-mime-type="text/plain">
-<pre>LogAbsErrMin (generic function with 1 method)</pre>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mf">1.0</span>
-<span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span>
-<span class="w">    </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span>
-<span class="p">]</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span><span class="w"> </span><span class="n">DataFrames</span><span class="p">,</span><span class="w"> </span><span class="n">CSV</span>
+<span class="k">using</span><span class="w"> </span><span class="n">IntervalArithmetic</span>
+<span class="k">using</span><span class="w"> </span><span class="n">LaTeXStrings</span>
+<span class="k">using</span><span class="w"> </span><span class="n">Statistics</span>
+<span class="c"># using Base</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/interval-weight-estimation.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/display/display-crisp-matrix.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/display/display-interval-vector.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/display/display-vector.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/crisp-pcm.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/importance-estimation.jl&quot;</span><span class="p">)</span>
+<span class="n">include</span><span class="p">(</span><span class="s">&quot;./src/solve-interval-ahp.jl&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -15380,17 +15425,30 @@ $$w_i = \lambda \exp \left( u_i \right)$$
 
 
 <div class="jp-RenderedText jp-OutputArea-output " data-mime-type="text/plain">
-<pre>4×4 Matrix{Float64}:
- 1.0  1.0  1.0  1.0
- 1.0  1.0  1.0  1.0
- 1.0  1.0  1.0  1.0
- 1.0  1.0  1.0  1.0</pre>
+<pre>solveIntervalAHP (generic function with 1 method)</pre>
 </div>
 
 </div>
 
 </div>
 
+</div>
+
+</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-julia"><pre><span></span><span class="c"># 評価基準数</span>
+<span class="n">N</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
 </div>
 
 </div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
@@ -15401,7 +15459,14 @@ $$w_i = \lambda \exp \left( u_i \right)$$
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;A = %</span><span class="si">$</span><span class="p">(</span><span class="n">matrixLaTeXString</span><span class="p">(</span><span class="n">A</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="c"># 真の区間重要度を読み込み</span>
+<span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CSV</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s">&quot;./src/data/N5_Given_interval_weight.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">header</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+<span class="n">T</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Vector</span><span class="p">{</span><span class="kt">Interval</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}}()</span><span class="w"> </span><span class="c"># Float64のところにTを使うとおかしくなるのはなぜか？</span>
+<span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="mi">1</span><span class="o">:</span><span class="n">N</span>
+<span class="w">    </span><span class="n">push!</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">interval</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">df</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">]))</span>
+<span class="k">end</span>
+
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;T = %</span><span class="si">$</span><span class="p">(</span><span class="n">intervalVectorLaTeXString</span><span class="p">(</span><span class="n">T</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -15423,7 +15488,7 @@ $$w_i = \lambda \exp \left( u_i \right)$$
 
 
 <div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
-$A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\ \end{pmatrix}$
+$T = \begin{pmatrix} \left[ 0.27, 0.33 \right] \\ \left[ 0.21, 0.29 \right] \\ \left[ 0.15, 0.25 \right] \\ \left[ 0.09, 0.21 \right] \\ \left[ 0.03, 0.17 \right] \end{pmatrix}$
 </div>
 
 </div>
@@ -15432,7 +15497,7 @@ $A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0
 
 </div>
 
-</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -15440,8 +15505,11 @@ $A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">solution</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LogAbsErrMin</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-<span class="n">W</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solution</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="c"># 一対比較行列を1000個読み込み</span>
+<span class="n">df1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CSV</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="s">&quot;./src/data/N5_a3_E_PCM_int.csv&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">header</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">|&gt;</span><span class="w"> </span><span class="n">DataFrame</span>
+
+<span class="c"># データフレームをN×Nのサブデータフレームに分割</span>
+<span class="n">subdfs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">split_dataframe</span><span class="p">(</span><span class="n">df1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">);</span>
 </pre></div>
 
      </div>
@@ -15449,31 +15517,58 @@ $A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0
 </div>
 </div>
 
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-julia"><pre><span></span><span class="c"># 結果格納用</span>
+<span class="n">P</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Matrix</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}(</span><span class="nb">undef</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">Q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Matrix</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}(</span><span class="nb">undef</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">R</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Matrix</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}(</span><span class="nb">undef</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">F</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Matrix</span><span class="p">{</span><span class="kt">Float64</span><span class="p">}(</span><span class="nb">undef</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span>
 
+<span class="c"># 1000個のデータで推定</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">subdf</span><span class="p">)</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">enumerate</span><span class="p">(</span><span class="n">subdfs</span><span class="p">)</span>
 
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<span class="w">    </span><span class="c"># 一対比較行列を取り出す</span>
+<span class="w">    </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kt">Matrix</span><span class="p">(</span><span class="n">subdf</span><span class="p">)</span>
+<span class="w">    </span><span class="c"># println(&quot;i = $i&quot;)</span>
+<span class="w">    </span><span class="c"># if i == 543</span>
+<span class="w">    </span><span class="c">#     display(L&quot;A = %$(matrixLaTeXString(A))&quot;)</span>
+<span class="w">    </span><span class="c">#     display(A)</span>
+<span class="w">    </span><span class="c"># end</span>
+<span class="w">    </span><span class="c"># display(L&quot;A = %$(matrixLaTeXString(A))&quot;)</span>
 
+<span class="w">    </span><span class="c"># 提案手法で区間重要度推定</span>
+<span class="w">    </span><span class="n">solution</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solveIntervalAHP</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">AD</span><span class="p">)</span>
+<span class="w">    </span><span class="n">E</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solution</span><span class="o">.</span><span class="n">W</span><span class="w"> </span><span class="c"># 区間重要度の推定値</span>
+<span class="w">    </span><span class="c"># display(L&quot;E = %$(intervalVectorLaTeXString(E))&quot;)</span>
+<span class="w">    </span><span class="c"># display(L&quot;T = %$(intervalVectorLaTeXString(T))&quot;)</span>
 
+<span class="w">    </span><span class="n">TcapE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">.∩</span><span class="w"> </span><span class="n">E</span><span class="w"> </span><span class="c"># 真の区間重要度と推定値の積集合</span>
+<span class="w">    </span><span class="n">TcupE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">.∪</span><span class="w"> </span><span class="n">E</span><span class="w"> </span><span class="c"># 真の区間重要度と推定値の和集合</span>
+<span class="w">    </span><span class="c"># display(L&quot;T ∩ E = %$(intervalVectorLaTeXString(TcapE))&quot;)</span>
+<span class="w">    </span><span class="c"># display(L&quot;T ∪ E = %$(intervalVectorLaTeXString(TcupE))&quot;)</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c"># P, Q, R, F の計算</span>
+<span class="w">    </span><span class="n">P</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculate_P</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">)</span><span class="w"> </span><span class="c"># 真の区間重要度と推定値の積集合の割合</span>
+<span class="w">    </span><span class="n">Q</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculate_Q</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">)</span><span class="w"> </span><span class="c"># 真の区間重要度と推定値の積集合の割合</span>
+<span class="w">    </span><span class="n">R</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculate_R</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">)</span><span class="w"> </span><span class="c"># 真の区間重要度と推定値の積集合の割合</span>
+<span class="w">    </span><span class="n">F</span><span class="p">[</span><span class="o">:</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">calculate_F</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">E</span><span class="p">)</span><span class="w"> </span><span class="c"># F値</span>
+<span class="w">    </span><span class="c"># display(L&quot;P = %$(VectorLaTeXString(P[:,i]))&quot;)</span>
+<span class="w">    </span><span class="c"># display(L&quot;Q = %$(VectorLaTeXString(Q[:,i]))&quot;)</span>
+<span class="w">    </span><span class="c"># display(L&quot;R = %$(VectorLaTeXString(R[:,i]))&quot;)</span>
+<span class="w">    </span><span class="c"># display(L&quot;F = %$(VectorLaTeXString(F[:,i]))&quot;)</span>
+<span class="k">end</span>
+</pre></div>
 
-
-<div class="jp-RenderedText jp-OutputArea-output " data-mime-type="text/plain">
-<pre>4-element Vector{Float64}:
- 0.25
- 0.25
- 0.25
- 0.25</pre>
+     </div>
 </div>
-
 </div>
-
-</div>
-
 </div>
 
 </div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
@@ -15484,7 +15579,14 @@ $A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;W = %</span><span class="si">$</span><span class="p">(</span><span class="n">VectorLaTeXString</span><span class="p">(</span><span class="n">W</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">P_ave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="n">Q_ave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+<span class="n">R_ave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+<span class="n">F_ave</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Pₐᵥₑ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">P_ave</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Qₐᵥₑ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">Q_ave</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Rₐᵥₑ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">R_ave</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Fₐᵥₑ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">F_ave</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -15506,7 +15608,125 @@ $A = \begin{pmatrix} 1.0 &amp; 1.0 &amp; 1.0 &amp; 1.0 \\1.0 &amp; 1.0 &amp; 1.0
 
 
 <div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
-$W = \begin{pmatrix} 0.25 \\ 0.25 \\ 0.25 \\ 0.25 \end{pmatrix}$
+$Pₐᵥₑ = 0.36789$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Qₐᵥₑ = 0.91623$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Rₐᵥₑ = 0.38843$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Fₐᵥₑ = 0.51715$
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div><div  class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[&nbsp;]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-julia"><pre><span></span><span class="n">P_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">var</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="n">Q_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">var</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+<span class="n">R_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">var</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+<span class="n">F_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">var</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Pᵥₐᵣ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">P_var</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Qᵥₐᵣ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">Q_var</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Rᵥₐᵣ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">R_var</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Fᵥₐᵣ = %</span><span class="si">$</span><span class="p">(</span><span class="n">round</span><span class="p">(</span><span class="n">F_var</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span><span class="s">&quot;</span><span class="p">)</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Pᵥₐᵣ = 0.028$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Qᵥₐᵣ = 0.03188$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Rᵥₐᵣ = 0.03594$
+</div>
+
+</div>
+<div class="jp-OutputArea-child">
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+
+<div class="jp-RenderedLatex jp-OutputArea-output " data-mime-type="text/latex">
+$Fᵥₐᵣ = 0.02966$
 </div>
 
 </div>

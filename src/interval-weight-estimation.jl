@@ -1,21 +1,58 @@
-import Pkg; Pkg.add("DataFrame"); Pkg.add("CSV")
-using DataFrame, CSV
+using DataFrames, CSV
 include("./crisp-pcm.jl")
 include("./solve-interval-ahp.jl")
 
-Estimation_Result = @NamedTuple{
-    # 区間重みベクトル
-    wᴸ::Vector{T}, wᵁ::Vector{T},
-    W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
-} where {T <: Real}
-
-function read_csv()
-    # CSVファイルを読み込む
-    df = CSV.read("data.csv", DataFrame)
-    # DataFrameをMatrixに変換
-    A = Matrix(df)
-    return A
+# データフレームを分割する関数
+function split_dataframe(df, chunk_size)
+    n = nrow(df)
+    m = div(n, chunk_size)
+    subdfs = []
+    for i in 1:chunk_size:n
+        push!(subdfs, df[i:min(i+chunk_size-1, n), :])
+    end
+    return subdfs
 end
 
-function estimate_weight(A::Matrix{T}, method::Function)::Estimation_Result where {T <: Real}
-    
+# Interval が空集合の場合は幅0を返す
+function c_diam(interval)
+    if isempty(interval)
+        return 0.0
+    else
+        return diam(interval)
+    end
+end
+
+# P値
+function calculate_P(T, E)
+    TcapE = T .∩ E
+    TcupE = T .∪ E
+    P = c_diam.(TcapE) ./ c_diam.(TcupE)
+    return P
+end
+
+# Q値
+function calculate_Q(T, E)
+    TcapE = T .∩ E
+    # if isempty(TcapE)
+    #     return 1.0
+    # end
+    Q = c_diam.(TcapE) ./ c_diam.(T)
+    return Q
+end
+
+# R値
+function calculate_R(T, E)
+    TcapE = T .∩ E
+    R = c_diam.(TcapE) ./ c_diam.(E)
+    return R
+end
+
+# F値
+function calculate_F(T, E)
+    Qv = calculate_Q(T, E)
+    Rv = calculate_R(T, E)
+    denominator = Qv .+ Rv
+    # 分母が 0 でない場合のみ計算を行う
+    F = ifelse.(denominator .== 0, 0.0, 2 * (Qv .* Rv) ./ denominator)
+    return F
+end

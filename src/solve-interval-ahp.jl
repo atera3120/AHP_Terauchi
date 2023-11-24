@@ -27,10 +27,6 @@ end
 
 function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 
-    if !isCrispPCM(A)
-        throw(ArgumentError("A is not a crisp PCM"))
-    end
-
     m, n = size(A)
 
     # Phase 1
@@ -48,7 +44,7 @@ function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 end
 
 # Phase2のループの中の部分
-function phase2_jump(Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -197,14 +193,14 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
         @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
         @constraint(model, (1-μₖ)-lₖ ≥ ε)
         Σl = sum(map(j-> l[j], filter(j -> j != k, 1:n)))
-        @constraint(model, Σl == d⃰)
+        @constraint(model, Σl ≤ d⃰+ε)
 
         # dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
         @objective(model, Min, l[k])
 
         optimize!(model)
         μₖ⃰ = value.(μₖ)
-        l⃰ = value.(l)
+        l⃰ = value.(l) 
         return (
             μₖ⃰ = μₖ⃰ ,
             l⃰ = l⃰
@@ -230,7 +226,7 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
     # Phase 2
     d⃰ = Vector{T}(undef, n) 
     for k = 1:n
-        d⃰[k] = phase2_jump(Wᶜ, k, n)
+        d⃰[k] = phase2_jump(A, Wᶜ, k, n)
     end
 
     # Phase 3
@@ -243,9 +239,13 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             lᵢ⃰ = l⃰[i]
             wᵢᶜ = Wᶜ[i,k]
             if i==k
+                # wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰/(1-μₖ⃰ )
+                # wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰/(1-μₖ⃰ )
                 wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰
                 wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰
             else
+                # wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰/(μₖ⃰ *wᵢᶜ)
+                # wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰/(μₖ⃰ *wᵢᶜ)
                 wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰
                 wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰
             end
@@ -263,6 +263,12 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
     for i = 1:n
         w̅̅ᴸ[i] = minimum(wᴸ[i, :])
         w̅̅ᵁ[i] = maximum(wᵁ[i, :])
+
+        # precision error 対応
+        if w̅̅ᴸ[i] > w̅̅ᵁ[i]
+            w̅̅ᴸ[i] = w̅̅ᵁ[i]
+        end
+        
         W̅̅[i] = (w̅̅ᴸ[i])..(w̅̅ᵁ[i])
     end
 

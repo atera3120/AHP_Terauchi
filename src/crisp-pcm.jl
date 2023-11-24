@@ -11,7 +11,7 @@ include("./nearly-equal.jl")
     # Check reciprocity
     for i in 1:size(A, 1)
         for j in (i+1):size(A, 2)
-            if !nearlyEqual(A[i, j], 1/A[j, i])
+            if !nearlyEqual(A[i, j]*A[j, i], 1)
                 return false
             end
         end
