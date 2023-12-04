@@ -6,7 +6,7 @@ import HiGHS
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 
-function AD(A::Matrix{T})::Array{T} where {T <: Real}
+function ALD(A::Matrix{T})::Array{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     if !isCrispPCM(A)
@@ -82,18 +82,4 @@ function GM(A::Matrix{T})::Array{T} where {T <: Real}
 
     return W = w
 
-end
-
-function CI(A::Matrix{T})::T where {T <: Real}
-    m, n = size(A)
-
-    if !isCrispPCM(A)
-        throw(ArgumentError("A is not a crisp PCM"))
-    end
-
-    λₘₐₓ = maximum(real(eigen(A).values))
-
-    return CI = (λₘₐₓ - n) / (n - 1)
-
-end
-    
+end   

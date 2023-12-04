@@ -26,7 +26,7 @@ function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <:
 end
 
 # Phase2のループの中の部分
-function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -38,7 +38,7 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T 
         for j = 1:n
             for i = filter(i -> i != j, 1:n)
                 aᵢⱼ = A[i,j]
-                wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
+                wᵢᶜ = Wᶜ[i]; wⱼᶜ = Wᶜ[j]
                 lᵢ = l[i]; lⱼ = l[j]
                 @constraint(model, aᵢⱼ*(wⱼᶜ-lⱼ) ≤ wᵢᶜ+lᵢ)
             end
@@ -46,17 +46,17 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T 
 
         for j = 1:n
             lⱼ = l[j];
-            wⱼᶜ = Wᶜ[j,k];
+            wⱼᶜ = Wᶜ[j];
             # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
             # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ = sum(map(i -> Wᶜ[i,k]+l[i], filter(i -> i != j, 1:n)))
-            Sᴸ = sum(map(i -> Wᶜ[i,k]-l[i], filter(i -> i != j, 1:n)))
+            Sᵁ = sum(map(i -> Wᶜ[i]+l[i], filter(i -> i != j, 1:n)))
+            Sᴸ = sum(map(i -> Wᶜ[i]-l[i], filter(i -> i != j, 1:n)))
             @constraint(model, Sᵁ + wⱼᶜ-lⱼ ≥ 1)
             @constraint(model, Sᴸ + wⱼᶜ+lⱼ ≤ 1)
         end
 
         for i = 1:n
-            wᵢᶜ = Wᶜ[i,k]; lᵢ = l[i]
+            wᵢᶜ = Wᶜ[i]; lᵢ = l[i]
             @constraint(model, wᵢᶜ - lᵢ ≥ ε)
         end
 
@@ -74,7 +74,7 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T 
 end
 
 # Phase3のループの中の部分
-function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d̂::T, k::Int, n::Int)::phase3_jump_result{T} where {T <: Real}
+function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -87,7 +87,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d̂::T, k::Int, n::Int)::pha
         for j = 1:n
             for i = filter(i -> i != j, 1:n)
                 aᵢⱼ = A[i,j]
-                wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
+                wᵢᶜ = Wᶜ[i]; wⱼᶜ = Wᶜ[j]
                 lᵢ = l[i]; lⱼ = l[j]
                 @constraint(model, aᵢⱼ*(wⱼᶜ-lⱼ) ≤ wᵢᶜ+lᵢ)
             end
@@ -95,17 +95,17 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d̂::T, k::Int, n::Int)::pha
 
         for j = 1:n
             lⱼ = l[j];
-            wⱼᶜ = Wᶜ[j,k];
+            wⱼᶜ = Wᶜ[j];
             # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
             # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ = sum(map(i -> Wᶜ[i,k]+l[i], filter(i -> i != j, 1:n)))
-            Sᴸ = sum(map(i -> Wᶜ[i,k]-l[i], filter(i -> i != j, 1:n)))
+            Sᵁ = sum(map(i -> Wᶜ[i]+l[i], filter(i -> i != j, 1:n)))
+            Sᴸ = sum(map(i -> Wᶜ[i]-l[i], filter(i -> i != j, 1:n)))
             @constraint(model, Sᵁ + wⱼᶜ-lⱼ ≥ 1)
             @constraint(model, Sᴸ + wⱼᶜ+lⱼ ≤ 1)
         end
 
         for i = 1:n
-            wᵢᶜ = Wᶜ[i,k]; lᵢ = l[i]
+            wᵢᶜ = Wᶜ[i]; lᵢ = l[i]
             @constraint(model, wᵢᶜ - lᵢ ≥ ε)
         end
 
@@ -139,26 +139,17 @@ function MMR_W(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T 
     # Phase 2
     d̂ = Vector{T}(undef, n) 
     for k = 1:n
-        d̂[k] = phase2_jump(A, 
-        Wᶜ, k, n)
+        d̂[k] = phase2_jump(A, Wᶜ, k, n)
     end
 
     # Phase 3
     wᴸ = Matrix{T}(undef, m, n)
     wᵁ = Matrix{T}(undef, m, n)
+    l̂ = Matrix{T}(undef, m, n) 
     for k = 1:n
-        l̂ = phase3_jump(A, Wᶜ, d̂[k], k, n)
-
-        for i = 1:n
-            l̂ᵢ = l̂[i]
-            wᵢᶜ = Wᶜ[i,k]
-
-            wᴸᵢ = wᵢᶜ - l̂ᵢ
-            wᵁᵢ = wᵢᶜ + l̂ᵢ
-
-            # 各kの時の推定値を縦ベクトルとして格納
-            wᴸ[i, k] = wᴸᵢ
-            wᵁ[i, k] = wᵁᵢ
+        l = phase3_jump(A, Wᶜ, d̂[k], k, n)
+        for j = 1:n
+            l̂[j, k] = l[j]
         end
     end
 
@@ -168,8 +159,9 @@ function MMR_W(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T 
     W̅̅ = Vector{Interval{T}}(undef, n)
 
     for i = 1:n
-        w̅̅ᴸ[i] = minimum(wᴸ[i, :])
-        w̅̅ᵁ[i] = maximum(wᵁ[i, :])
+        wᵢᶜ = Wᶜ[i]
+        w̅̅ᴸ[i] = wᵢᶜ - minimum(l̂[i, :])
+        w̅̅ᵁ[i] = wᵢᶜ + maximum(l̂[i, :])
 
         # precision error 対応
         if w̅̅ᴸ[i] > w̅̅ᵁ[i]

@@ -13,18 +13,6 @@ LPResult_Individual = @NamedTuple{
     W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
 } where {T <: Real}
 
-# 任意の行と列を削除
-function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <: Real}
-    m, n = size(A)
-
-    # 行を除外
-    new_matrix = A[setdiff(1:m, row), :]
-    # 列を除外
-    result_matrix = new_matrix[:, setdiff(1:n, col)]
-        
-    return result_matrix
-end
-
 function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 
     m, n = size(A)
@@ -118,20 +106,6 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T 
     end
 end
 
-# function phase2(A::Matrix{T}, method::Function)::Vector{T} where {T <: Real}
-
-#     Wᶜ = phase1(A, method) # phase1の動作は確認済
-#     m, n = size(A)
-   
-#     # Phase 2
-#     d⃰ = Vector{T}(undef, n) 
-#     for k = 1:n
-#         d⃰[k] = phase2_jump(Wᶜ, k, n)
-#     end
-
-#     return d⃰
-# end
-
 # Phase3の戻り値
 phase3_jump_result = @NamedTuple{
     # 区間重みベクトル
@@ -211,8 +185,8 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
     end
 end
 
-# 提案手法
-function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
+# 提案手法 MMR-E, MMR-G, MMR-A
+function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -239,13 +213,9 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             lᵢ⃰ = l⃰[i]
             wᵢᶜ = Wᶜ[i,k]
             if i==k
-                # wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰/(1-μₖ⃰ )
-                # wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰/(1-μₖ⃰ )
                 wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰
                 wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰
             else
-                # wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰/(μₖ⃰ *wᵢᶜ)
-                # wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰/(μₖ⃰ *wᵢᶜ)
                 wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰
                 wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰
             end
@@ -269,8 +239,16 @@ function solveIntervalAHP(A::Matrix{T}, method::Function)::LPResult_Individual{T
             w̅̅ᴸ[i] = w̅̅ᵁ[i]
         end
         
+    end
+
+    w_c = sum(w̅̅ᴸ.+ w̅̅ᵁ)/2
+
+    w̅̅ᴸ = w̅̅ᴸ ./ w_c
+    w̅̅ᵁ = w̅̅ᵁ ./ w_c
+    for i = 1:n
         W̅̅[i] = (w̅̅ᴸ[i])..(w̅̅ᵁ[i])
     end
+
 
     return (
         wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,

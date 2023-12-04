@@ -1,6 +1,5 @@
-using DataFrames, CSV
+using DataFrames
 include("./crisp-pcm.jl")
-include("./solve-interval-ahp.jl")
 
 # データフレームを分割する関数
 function split_dataframe(df, chunk_size)
@@ -11,6 +10,19 @@ function split_dataframe(df, chunk_size)
         push!(subdfs, df[i:min(i+chunk_size-1, n), :])
     end
     return subdfs
+end
+
+function CI(A::Matrix{T})::T where {T <: Real}
+    m, n = size(A)
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    λₘₐₓ = maximum(real(eigen(A).values))
+
+    return CI = (λₘₐₓ - n) / (n - 1)
+
 end
 
 # Interval が空集合の場合は幅0を返す
