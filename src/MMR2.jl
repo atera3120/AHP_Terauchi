@@ -2,15 +2,19 @@ using IntervalArithmetic
 using JuMP
 import HiGHS
 
+using Plots
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 include("./importance-estimation.jl")
 
 
-LPResult_Individual = @NamedTuple{
+MMRE_Individual = @NamedTuple{
     # 区間重みベクトル
+    s::T,
+    centers::Matrix{T},
+    l::Matrix{T},
     wᴸ::Vector{T}, wᵁ::Vector{T},
-    W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
+    W::Vector{Interval{T}} # ([wᵢᴸ, wᵢᵁ])
 } where {T <: Real}
 
 # 任意の行と列を削除
@@ -198,7 +202,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
+function MMR(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -218,6 +222,9 @@ function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <:
     # Phase 3
     wᴸ = Matrix{T}(undef, m, n)
     wᵁ = Matrix{T}(undef, m, n)
+    centers = Matrix{T}(undef, m, n)
+    l = Matrix{T}(undef, m, n)
+
     for k = 1:n
         (μₖ⃰, l⃰) = phase3_jump(A, Wᶜ, d⃰[k], k, n)
 
@@ -227,15 +234,21 @@ function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <:
             if i==k
                 wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰
                 wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰
+                centers[i, k] = (1-μₖ⃰ )
+                l[i, k] = lᵢ⃰
+
             else
                 wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰
                 wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰
+                centers[i, k] = μₖ⃰ *wᵢᶜ
+                l[i, k] = lᵢ⃰
             end
             # 各kの時の推定値を縦ベクトルとして格納
             wᴸ[i, k] = wᴸᵢ
             wᵁ[i, k] = wᵁᵢ
         end
     end
+
 
     # Phase 4
     w̅̅ᴸ = Vector{T}(undef, n)
@@ -263,6 +276,8 @@ function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <:
 
 
     return (
+        s=w_c,
+        centers=centers, l=l,
         wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,
         W=W̅̅
     )
