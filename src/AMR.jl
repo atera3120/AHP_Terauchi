@@ -198,7 +198,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
+function AMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))

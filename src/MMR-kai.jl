@@ -8,7 +8,7 @@ include("./nearly-equal.jl")
 include("./importance-estimation.jl")
 
 
-MMRE_Individual = @NamedTuple{
+MMRE_Individual_kai = @NamedTuple{
     # 区間重みベクトル
     s::T,
     centers::Matrix{T},
@@ -29,7 +29,7 @@ function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <:
     return result_matrix
 end
 
-function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
+function phase1_kai(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 
     m, n = size(A)
 
@@ -48,15 +48,15 @@ function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 end
 
 # Phase2のループの中の部分
-function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+function phase2_jump_kai(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
 
     try
-        @variable(model, L[i=1:n] ≥ ε)
-        @variable(model, 1<t)
+        @variable(model, L[i=1:n] ≥ 0) # ここはイプシロンを０に変更
+        @variable(model, t ≥ 1+ε) # 極限をとるのでOK
         Lₖ = L[k]
         
         for j = filter(j -> j != k, 1:n)
@@ -123,77 +123,78 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T 
 end
 
 # Phase3の戻り値
-phase3_jump_result = @NamedTuple{
+phase3_jump_result_kai = @NamedTuple{
     # 区間重みベクトル
-    tₖ'::T, L'::Vector{T},
+    tₖ⃰::T, L⃰::Vector{T},
 } where {T <: Real}
 
 # Phase3のループの中の部分
-function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result{T} where {T <: Real}
+function phase3_jump_kai(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result_kai{T} where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
 
     try
-        @variable(model, L'[i=1:n] ≥ ε)
-        @variable(model, 1<t')
-        Lₖ' = L'[k]
+        @variable(model, L[i=1:n] ≥ 0)
+        @variable(model, t ≥ 1+ε)
+        Lₖ = L[k]
         
         for j = filter(j -> j != k, 1:n)
             for i = filter(i -> i != j && i != k, 1:n)
                 aᵢⱼ = A[i,j]
                 wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
-                Lᵢ' = L'[i]; Lⱼ' = L'[j]
-                @constraint(model, aᵢⱼ*((t'-1)*wⱼᶜ-Lⱼ') ≤ (t'-1)*wᵢᶜ+Lᵢ')
+                Lᵢ = L[i]; Lⱼ = L[j]
+                @constraint(model, aᵢⱼ*((t-1)*wⱼᶜ-Lⱼ) ≤ (t-1)*wᵢᶜ+Lᵢ)
             end
         end
 
         for j = filter(j -> j != k, 1:n)
             aₖⱼ = A[k, j]
-            Lⱼ' = L'[j]
+            Lⱼ = L[j]
             wⱼᶜ = Wᶜ[j,k]
-            @constraint(model, aₖⱼ*((t'-1)*wⱼᶜ-Lⱼ') ≤ 1+Lₖ')
+            @constraint(model, aₖⱼ*((t-1)*wⱼᶜ-Lⱼ) ≤ 1+Lₖ)
         end
 
         for i = filter(i -> i != k, 1:n)
             aᵢₖ = A[i,k]
-            Lᵢ' = L'[i]
+            Lᵢ = L[i]
             wᵢᶜ = Wᶜ[i,k]
-            @constraint(model, aᵢₖ*(1-Lₖ') ≤ (t'-1)*wᵢᶜ+Lᵢ')
-            @constraint(model, (t'-1)*wᵢᶜ - Lᵢ' ≥ t'*ε)
+            @constraint(model, aᵢₖ*(1-Lₖ) ≤ (t-1)*wᵢᶜ+Lᵢ)
+            @constraint(model, (t-1)*wᵢᶜ - Lᵢ ≥ t*ε)
         end
 
         for j = filter(j -> j != k, 1:n)
-            Lⱼ' = L'[j];
+            Lⱼ = L[j];
             wⱼᶜ = Wᶜ[j,k];
             # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
             # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ = sum(map(i -> (t'-1)*Wᶜ[i,k]+L'[i], filter(i -> i != j && i != k, 1:n)))
-            Sᴸ = sum(map(i -> (t'-1)*Wᶜ[i,k]-L'[i], filter(i -> i != j && i != k, 1:n)))
-            @constraint(model, 1+Lₖ' + Sᵁ + (t'-1)*wⱼᶜ-Lⱼ' ≥ t')
-            @constraint(model, 1-Lₖ' + Sᴸ + (t'-1)*wⱼᶜ+Lⱼ' ≤ t')
+            Sᵁ = sum(map(i -> (t-1)*Wᶜ[i,k]+L[i], filter(i -> i != j && i != k, 1:n)))
+            Sᴸ = sum(map(i -> (t-1)*Wᶜ[i,k]-L[i], filter(i -> i != j && i != k, 1:n)))
+            @constraint(model, 1+Lₖ + Sᵁ + (t-1)*wⱼᶜ-Lⱼ ≥ t)
+            @constraint(model, 1-Lₖ + Sᴸ + (t-1)*wⱼᶜ+Lⱼ ≤ t)
         end
 
         # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
         # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
-        Sᵁ_dash = sum(map(i -> (t'-1)*Wᶜ[i,k]+L'[i], filter(i -> i != k, 1:n)))
-        Sᴸ_dash = sum(map(i -> (t'-1)*Wᶜ[i,k]-L'[i], filter(i -> i != k, 1:n)))
-        @constraint(model, Sᵁ_dash + 1-Lₖ' ≥ t')
-        @constraint(model, Sᴸ_dash + 1+Lₖ' ≤ t')
-        @constraint(model, 1-Lₖ' ≥ t'*ε)
-        Σl = sum(map(j-> L'[j], filter(j -> j != k, 1:n)))
-        @constraint(model, Σl ≤ (t'-1)*d⃰+ε)
+        Sᵁ_dash = sum(map(i -> (t-1)*Wᶜ[i,k]+L[i], filter(i -> i != k, 1:n)))
+        Sᴸ_dash = sum(map(i -> (t-1)*Wᶜ[i,k]-L[i], filter(i -> i != k, 1:n)))
+        @constraint(model, Sᵁ_dash + 1-Lₖ ≥ t)
+        @constraint(model, Sᴸ_dash + 1+Lₖ ≤ t)
+        @constraint(model, 1-Lₖ ≥ t*ε)
+        Σl = sum(map(j-> L[j], filter(j -> j != k, 1:n)))
+        @constraint(model, Σl ≤ (t-1)*d⃰+ε)
 
         # dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
-        @objective(model, Min, l[k])
+        @objective(model, Min, L[k])
 
         optimize!(model)
-        tₖ' = value.(t')
-        L' = value.(L') 
+        # println("k=$k, t = ", value.(t))
+        tₖ⃰ = value.(t)
+        L⃰ = value.(L) 
         return (
-            tₖ' = tₖ' ,
-            L' =  L'
+            tₖ⃰ = tₖ⃰ ,
+            L⃰ = L⃰
         )
 
     finally
@@ -202,7 +203,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <: Real}
+function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual_kai{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -211,12 +212,12 @@ function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <:
     m, n = size(A)
 
     # Phase 1
-    Wᶜ = phase1(A, method)
+    Wᶜ = phase1_kai(A, method)
 
     # Phase 2
     d⃰ = Vector{T}(undef, n) 
     for k = 1:n
-        d⃰[k] = phase2_jump(A, Wᶜ, k, n)
+        d⃰[k] = phase2_jump_kai(A, Wᶜ, k, n)
     end
 
     # Phase 3
@@ -226,21 +227,25 @@ function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <:
     l = Matrix{T}(undef, m, n)
 
     for k = 1:n
-        (tₖ', L') = phase3_jump(A, Wᶜ, d⃰[k], k, n)
+        (tₖ⃰, L⃰) = phase3_jump_kai(A, Wᶜ, d⃰[k], k, n)
 
         for i = 1:n
-            lᵢ⃰ = L'[i]/tₖ'
+            lᵢ⃰ = L⃰[i]/tₖ⃰
             wᵢᶜ = Wᶜ[i,k]
             if i==k
-                wᴸᵢ = 1/tₖ' - lᵢ⃰
-                wᵁᵢ = 1/tₖ' + lᵢ⃰
-                centers[i, k] = 1/tₖ'
+                wᴸᵢ = 1/tₖ⃰ - lᵢ⃰
+                wᵁᵢ = 1/tₖ⃰ + lᵢ⃰
+                centers[i, k] = 1/tₖ⃰
                 l[i, k] = lᵢ⃰
 
             else
-                wᴸᵢ = (1-1/tₖ')*wᵢᶜ - lᵢ⃰
-                wᵁᵢ = (1-1/tₖ')*wᵢᶜ + lᵢ⃰
-                centers[i, k] = (1-1/tₖ')*wᵢᶜ
+                wᴸᵢ = (1-1/tₖ⃰)*wᵢᶜ - lᵢ⃰
+                wᵁᵢ = (1-1/tₖ⃰)*wᵢᶜ + lᵢ⃰
+                # println(tₖ⃰)
+                centers[i, k] = (1-1/tₖ⃰)*wᵢᶜ
+                # wᴸᵢ = wᵢᶜ - lᵢ⃰
+                # wᵁᵢ = wᵢᶜ + lᵢ⃰
+                # centers[i, k] = wᵢᶜ
                 l[i, k] = lᵢ⃰
             end
             # 各kの時の推定値を縦ベクトルとして格納
