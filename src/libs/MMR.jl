@@ -4,7 +4,7 @@ import HiGHS
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
-include("./importance-estimation.jl")
+include("./solve-deterministic-ahp.jl")
 
 
 LPResult_Individual = @NamedTuple{
@@ -198,7 +198,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-function AMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
+function MMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -243,8 +243,8 @@ function AMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <:
     W̅̅ = Vector{Interval{T}}(undef, n)
 
     for i = 1:n
-        w̅̅ᴸ[i] = mean(wᴸ[i, :])
-        w̅̅ᵁ[i] = mean(wᵁ[i, :])
+        w̅̅ᴸ[i] = minimum(wᴸ[i, :])
+        w̅̅ᵁ[i] = maximum(wᵁ[i, :])
 
         # precision error 対応
         if w̅̅ᴸ[i] > w̅̅ᵁ[i]
@@ -253,9 +253,14 @@ function AMR(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <:
         
     end
 
+    w_c = sum(w̅̅ᴸ.+ w̅̅ᵁ)/2
+
+    w̅̅ᴸ = w̅̅ᴸ ./ w_c
+    w̅̅ᵁ = w̅̅ᵁ ./ w_c
     for i = 1:n
         W̅̅[i] = (w̅̅ᴸ[i])..(w̅̅ᵁ[i])
     end
+
 
     return (
         wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,

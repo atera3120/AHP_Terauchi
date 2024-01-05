@@ -4,20 +4,23 @@ import HiGHS
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
-include("./importance-estimation.jl")
+include("./solve-deterministic-ahp.jl")
+
+"""
+従来法のMMR-Wをjuliaにて実装
+提案手法の実装が正しいことを確認するために、先行研究の結果と比較する
+"""
 
 
-MMRW_Individual = @NamedTuple{
+LPResult_Individual = @NamedTuple{
     # 区間重みベクトル
-    centers::Array{T},
-    l::Matrix{T},
     wᴸ::Vector{T}, wᵁ::Vector{T},
     W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
 } where {T <: Real}
 
 # Phase2のループの中の部分
 function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
-    ε = 1e-8 # << 1
+    ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
@@ -65,7 +68,7 @@ end
 
 # Phase3のループの中の部分
 function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
-    ε = 1e-8 # << 1
+    ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
@@ -113,7 +116,8 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vec
     end
 end
 
-function MMR_W(A::Matrix{T}, method::Function)::MMRW_Individual{T} where {T <: Real}
+# 提案手法
+function MMR_W(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -161,8 +165,6 @@ function MMR_W(A::Matrix{T}, method::Function)::MMRW_Individual{T} where {T <: R
     end
 
     return (
-        centers=Wᶜ,
-        l=l̂,
         wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,
         W=W̅̅
     )

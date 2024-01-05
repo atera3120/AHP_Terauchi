@@ -7,7 +7,6 @@ include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 
 function ALD(A::Matrix{T})::Array{T} where {T <: Real}
-    ε = 1e-8 # << 1
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))

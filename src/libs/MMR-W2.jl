@@ -4,7 +4,7 @@ import HiGHS
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
-include("./importance-estimation.jl")
+include("./solve-deterministic-ahp.jl")
 
 
 MMRW_Individual = @NamedTuple{
