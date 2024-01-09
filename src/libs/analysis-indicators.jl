@@ -65,3 +65,21 @@ function calculate_F(T, E)
     F = ifelse.(denominator .== 0, 0.0, 2 * (Qv .* Rv) ./ denominator)
     return F
 end
+
+# crispな推定値がTの範囲に含まれているか
+# 区間の中央値との距離
+function est_in_range(T, E)
+    n = length(E)
+    
+    cnt = 0
+    diff = 0.0
+
+    for i in 1:n
+        diff += abs( (sup(T[i])+inf(T[i]))/2 -E[i] )
+        if E[i] in T[i]
+            cnt += 1
+        end
+    end
+    
+    return cnt/n, diff/n
+end
