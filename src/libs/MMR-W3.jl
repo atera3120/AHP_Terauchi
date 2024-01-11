@@ -16,7 +16,7 @@ MMRW_Individual = @NamedTuple{
 } where {T <: Real}
 
 # Phase2のループの中の部分
-function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
+@inline function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -64,7 +64,7 @@ function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T 
 end
 
 # Phase3のループの中の部分
-function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
+@inline function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -113,7 +113,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vec
     end
 end
 
-function MMR_W(A::Matrix{T}, method::Function)::MMRW_Individual{T} where {T <: Real}
+@inline function MMR_W(A::Matrix{T}, method::Function)::MMRW_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))

@@ -18,7 +18,7 @@ MMRE_Individual = @NamedTuple{
 } where {T <: Real}
 
 # 任意の行と列を削除
-function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <: Real}
+@inline function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <: Real}
     m, n = size(A)
 
     # 行を除外
@@ -29,7 +29,7 @@ function remove_row_col(A::Matrix{T}, row::Int, col::Int)::Matrix{T} where {T <:
     return result_matrix
 end
 
-function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
+@inline function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 
     m, n = size(A)
 
@@ -48,7 +48,7 @@ function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 end
 
 # Phase2のループの中の部分
-function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+@inline function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -129,7 +129,7 @@ phase3_jump_result = @NamedTuple{
 } where {T <: Real}
 
 # Phase3のループの中の部分
-function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result{T} where {T <: Real}
+@inline function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result{T} where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -202,7 +202,7 @@ function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::ph
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-function MMR(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <: Real}
+@inline function MMR(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))

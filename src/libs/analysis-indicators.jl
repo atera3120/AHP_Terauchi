@@ -2,7 +2,7 @@ using DataFrames
 include("./crisp-pcm.jl")
 
 # データフレームを分割する関数
-function split_dataframe(df, chunk_size)
+@inline function split_dataframe(df, chunk_size)
     n = nrow(df)
     m = div(n, chunk_size)
     subdfs = []
@@ -12,7 +12,7 @@ function split_dataframe(df, chunk_size)
     return subdfs
 end
 
-function CI(A::Matrix{T})::T where {T <: Real}
+@inline function CI(A::Matrix{T})::T where {T <: Real}
     m, n = size(A)
 
     if !isCrispPCM(A)
@@ -26,7 +26,7 @@ function CI(A::Matrix{T})::T where {T <: Real}
 end
 
 # Interval が空集合の場合は幅0を返す
-function c_diam(interval)
+@inline function c_diam(interval)
     if isempty(interval)
         return 0.0
     else
@@ -35,7 +35,7 @@ function c_diam(interval)
 end
 
 # P値
-function calculate_P(T, E)
+@inline function calculate_P(T, E)
     TcapE = T .∩ E
     TcupE = T .∪ E
     P = c_diam.(TcapE) ./ c_diam.(TcupE)
@@ -43,21 +43,33 @@ function calculate_P(T, E)
 end
 
 # Q値
-function calculate_Q(T, E)
+@inline function calculate_Q(T, E)
     TcapE = T .∩ E
     Q = c_diam.(TcapE) ./ c_diam.(T)
     return Q
 end
 
 # R値
-function calculate_R(T, E)
+@inline function calculate_R(T, E)
     TcapE = T .∩ E
-    R = c_diam.(TcapE) ./ c_diam.(E)
+    R = Float64[]
+    for i in eachindex(T)
+        if c_diam(E[i])==0.0
+            if issubset(E[i],T[i])
+                push!(R, 1.0)
+            else
+                push!(R, 0.0)
+            end
+        else
+            push!(R, c_diam(TcapE[i]) / c_diam(E[i]))
+        end
+    end
+    # R = c_diam.(TcapE) ./ c_diam.(E)
     return R
 end
 
 # F値
-function calculate_F(T, E)
+@inline function calculate_F(T, E)
     Qv = calculate_Q(T, E)
     Rv = calculate_R(T, E)
     denominator = Qv .+ Rv
@@ -68,7 +80,7 @@ end
 
 # crispな推定値がTの範囲に含まれているか
 # 区間の中央値との距離
-function est_in_range(T, E)
+@inline function est_in_range(T, E)
     n = length(E)
     
     cnt = 0

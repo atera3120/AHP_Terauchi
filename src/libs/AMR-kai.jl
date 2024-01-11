@@ -8,7 +8,7 @@ include("./nearly-equal.jl")
 include("./solve-deterministic-ahp.jl")
 
 
-MMRE_Individual = @NamedTuple{
+MMRE_Individual_kai = @NamedTuple{
     # 区間重みベクトル
     s::T,
     centers::Matrix{T},
@@ -29,7 +29,7 @@ MMRE_Individual = @NamedTuple{
     return result_matrix
 end
 
-@inline function phase1(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
+@inline function phase1_kai(A::Matrix{T}, method::Function)::Matrix{T} where {T <: Real}
 
     m, n = size(A)
 
@@ -48,66 +48,66 @@ end
 end
 
 # Phase2のループの中の部分
-@inline function phase2_jump(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
+@inline function phase2_jump_kai(A::Matrix{T}, Wᶜ::Matrix{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
 
     try
-        @variable(model, l[i=1:n] ≥ ε)
-        @variable(model, ε<=μₖ<=1-ε)
-        lₖ = l[k]
+        @variable(model, L[i=1:n] ≥ 0) # ここはイプシロンを０に変更
+        @variable(model, t ≥ 1+ε) # 極限をとるのでOK
+        Lₖ = L[k]
         
         for j = filter(j -> j != k, 1:n)
             for i = filter(i -> i != j && i != k, 1:n)
                 aᵢⱼ = A[i,j]
                 wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
-                lᵢ = l[i]; lⱼ = l[j]
-                @constraint(model, aᵢⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ μₖ*wᵢᶜ+lᵢ)
+                Lᵢ = L[i]; Lⱼ = L[j]
+                @constraint(model, aᵢⱼ*(wⱼᶜ-Lⱼ) ≤ wᵢᶜ+Lᵢ)
             end
         end
 
         for j = filter(j -> j != k, 1:n)
             aₖⱼ = A[k, j]
-            lⱼ = l[j]
+            Lⱼ = L[j]
             wⱼᶜ = Wᶜ[j,k]
-            @constraint(model, aₖⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ 1-μₖ +lₖ)
+            @constraint(model, aₖⱼ*(wⱼᶜ-Lⱼ) ≤ t-1 +Lₖ)
         end
 
         for i = filter(i -> i != k, 1:n)
             aᵢₖ = A[i,k]
-            lᵢ = l[i]
+            Lᵢ = L[i]
             wᵢᶜ = Wᶜ[i,k]
-            @constraint(model, aᵢₖ*(1-μₖ-lₖ) ≤ μₖ*wᵢᶜ+lᵢ)
-            @constraint(model, μₖ*wᵢᶜ - lᵢ ≥ ε)
+            @constraint(model, aᵢₖ*(t-1-Lₖ) ≤ wᵢᶜ+Lᵢ)
+            @constraint(model, wᵢᶜ - Lᵢ ≥ t*ε)
         end
 
         for j = filter(j -> j != k, 1:n)
-            lⱼ = l[j];
+            Lⱼ = L[j];
             wⱼᶜ = Wᶜ[j,k];
             # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
             # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != j && i != k, 1:n)))
-            Sᴸ = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != j && i != k, 1:n)))
-            @constraint(model, (1-μₖ)+lₖ + Sᵁ + μₖ*wⱼᶜ-lⱼ ≥ 1)
-            @constraint(model, (1-μₖ)-lₖ + Sᴸ + μₖ*wⱼᶜ+lⱼ ≤ 1)
+            Sᵁ = sum(map(i -> Wᶜ[i,k]+L[i], filter(i -> i != j && i != k, 1:n)))
+            Sᴸ = sum(map(i -> Wᶜ[i,k]-L[i], filter(i -> i != j && i != k, 1:n)))
+            @constraint(model, (t-1)+Lₖ + Sᵁ + wⱼᶜ-Lⱼ ≥ t)
+            @constraint(model, (t-1)-Lₖ + Sᴸ + wⱼᶜ+Lⱼ ≤ t)
         end
 
         # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
         # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
-        Sᵁ_dash = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != k, 1:n)))
-        Sᴸ_dash = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != k, 1:n)))
-        @constraint(model, Sᵁ_dash + (1-μₖ)-lₖ ≥ 1)
-        @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
-        @constraint(model, (1-μₖ)-lₖ ≥ ε)
+        Sᵁ_dash = sum(map(i -> Wᶜ[i,k]+L[i], filter(i -> i != k, 1:n)))
+        Sᴸ_dash = sum(map(i -> Wᶜ[i,k]-L[i], filter(i -> i != k, 1:n)))
+        @constraint(model, Sᵁ_dash + (t-1)-Lₖ ≥ t)
+        @constraint(model, Sᴸ_dash + (t-1)+Lₖ ≤ t)
+        @constraint(model, (t-1)-Lₖ ≥ t*ε)
 
-        dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
+        dₖ  = sum(map(j -> L[j], filter(j -> j != k, 1:n)))
         @objective(model, Min, dₖ)
 
         optimize!(model)
 
-        dₖ⃰ = sum(map(j -> value.(l[j]), filter(j -> j != k, 1:n)))
+        dₖ⃰ = sum(map(j -> value.(L[j]), filter(j -> j != k, 1:n)))
 
         # for i = 1:n
         #     println("k=$k, l[$i] = ", value.(l[i]))
@@ -123,77 +123,78 @@ end
 end
 
 # Phase3の戻り値
-phase3_jump_result = @NamedTuple{
+phase3_jump_result_kai = @NamedTuple{
     # 区間重みベクトル
-    μₖ⃰::T, l⃰::Vector{T},
+    tₖ⃰::T, L⃰::Vector{T},
 } where {T <: Real}
 
 # Phase3のループの中の部分
-@inline function phase3_jump(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result{T} where {T <: Real}
+@inline function phase3_jump_kai(A::Matrix{T}, Wᶜ::Matrix{T}, d⃰::T, k::Int, n::Int)::phase3_jump_result_kai{T} where {T <: Real}
     ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
 
     try
-        @variable(model, l[i=1:n] ≥ ε)
-        @variable(model, ε<=μₖ<=1-ε)
-        lₖ = l[k]
+        @variable(model, L[i=1:n] ≥ 0)
+        @variable(model, t ≥ 1+ε)
+        Lₖ = L[k]
         
         for j = filter(j -> j != k, 1:n)
             for i = filter(i -> i != j && i != k, 1:n)
                 aᵢⱼ = A[i,j]
                 wᵢᶜ = Wᶜ[i,k]; wⱼᶜ = Wᶜ[j,k]
-                lᵢ = l[i]; lⱼ = l[j]
-                @constraint(model, aᵢⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ μₖ*wᵢᶜ+lᵢ)
+                Lᵢ = L[i]; Lⱼ = L[j]
+                @constraint(model, aᵢⱼ*((t-1)*wⱼᶜ-Lⱼ) ≤ (t-1)*wᵢᶜ+Lᵢ)
             end
         end
 
         for j = filter(j -> j != k, 1:n)
             aₖⱼ = A[k, j]
-            lⱼ = l[j]
+            Lⱼ = L[j]
             wⱼᶜ = Wᶜ[j,k]
-            @constraint(model, aₖⱼ*(μₖ*wⱼᶜ-lⱼ) ≤ 1-μₖ +lₖ)
+            @constraint(model, aₖⱼ*((t-1)*wⱼᶜ-Lⱼ) ≤ 1+Lₖ)
         end
 
         for i = filter(i -> i != k, 1:n)
             aᵢₖ = A[i,k]
-            lᵢ = l[i]
+            Lᵢ = L[i]
             wᵢᶜ = Wᶜ[i,k]
-            @constraint(model, aᵢₖ*(1-μₖ-lₖ) ≤ μₖ*wᵢᶜ+lᵢ)
-            @constraint(model, μₖ*wᵢᶜ - lᵢ ≥ ε)
+            @constraint(model, aᵢₖ*(1-Lₖ) ≤ (t-1)*wᵢᶜ+Lᵢ)
+            @constraint(model, (t-1)*wᵢᶜ - Lᵢ ≥ t*ε)
         end
 
         for j = filter(j -> j != k, 1:n)
-            lⱼ = l[j];
+            Lⱼ = L[j];
             wⱼᶜ = Wᶜ[j,k];
             # Sᵁ = Σ(μₖ*wᵢᶜ+lᵢ)
             # Sᴸ = Σ(μₖ*wᵢᶜ-lᵢ)
-            Sᵁ = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != j && i != k, 1:n)))
-            Sᴸ = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != j && i != k, 1:n)))
-            @constraint(model, (1-μₖ)+lₖ + Sᵁ + μₖ*wⱼᶜ-lⱼ ≥ 1)
-            @constraint(model, (1-μₖ)-lₖ + Sᴸ + μₖ*wⱼᶜ+lⱼ ≤ 1)
+            Sᵁ = sum(map(i -> (t-1)*Wᶜ[i,k]+L[i], filter(i -> i != j && i != k, 1:n)))
+            Sᴸ = sum(map(i -> (t-1)*Wᶜ[i,k]-L[i], filter(i -> i != j && i != k, 1:n)))
+            @constraint(model, 1+Lₖ + Sᵁ + (t-1)*wⱼᶜ-Lⱼ ≥ t)
+            @constraint(model, 1-Lₖ + Sᴸ + (t-1)*wⱼᶜ+Lⱼ ≤ t)
         end
 
         # Sᵁ_dash = Σ(μₖ*wᵢᶜ+lᵢ)
         # Sᴸ_dash = Σ(μₖ*wᵢᶜ-lᵢ)
-        Sᵁ_dash = sum(map(i -> μₖ*Wᶜ[i,k]+l[i], filter(i -> i != k, 1:n)))
-        Sᴸ_dash = sum(map(i -> μₖ*Wᶜ[i,k]-l[i], filter(i -> i != k, 1:n)))
-        @constraint(model, Sᵁ_dash + (1-μₖ)-lₖ ≥ 1)
-        @constraint(model, Sᴸ_dash + (1-μₖ)+lₖ ≤ 1)
-        @constraint(model, (1-μₖ)-lₖ ≥ ε)
-        Σl = sum(map(j-> l[j], filter(j -> j != k, 1:n)))
-        @constraint(model, Σl ≤ d⃰+ε)
+        Sᵁ_dash = sum(map(i -> (t-1)*Wᶜ[i,k]+L[i], filter(i -> i != k, 1:n)))
+        Sᴸ_dash = sum(map(i -> (t-1)*Wᶜ[i,k]-L[i], filter(i -> i != k, 1:n)))
+        @constraint(model, Sᵁ_dash + 1-Lₖ ≥ t)
+        @constraint(model, Sᴸ_dash + 1+Lₖ ≤ t)
+        @constraint(model, 1-Lₖ ≥ t*ε)
+        Σl = sum(map(j-> L[j], filter(j -> j != k, 1:n)))
+        @constraint(model, Σl ≤ (t-1)*d⃰+ε)
 
         # dₖ  = sum(map(j -> l[j], filter(j -> j != k, 1:n)))
-        @objective(model, Min, l[k])
+        @objective(model, Min, L[k])
 
         optimize!(model)
-        μₖ⃰ = value.(μₖ)
-        l⃰ = value.(l) 
+        # println("k=$k, t = ", value.(t))
+        tₖ⃰ = value.(t)
+        L⃰ = value.(L) 
         return (
-            μₖ⃰ = μₖ⃰ ,
-            l⃰ = l⃰
+            tₖ⃰ = tₖ⃰ ,
+            L⃰ = L⃰
         )
 
     finally
@@ -202,7 +203,7 @@ phase3_jump_result = @NamedTuple{
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-@inline function MMR(A::Matrix{T}, method::Function)::MMRE_Individual{T} where {T <: Real}
+@inline function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual_kai{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -211,12 +212,12 @@ end
     m, n = size(A)
 
     # Phase 1
-    Wᶜ = phase1(A, method)
+    Wᶜ = phase1_kai(A, method)
 
     # Phase 2
     d⃰ = Vector{T}(undef, n) 
     for k = 1:n
-        d⃰[k] = phase2_jump(A, Wᶜ, k, n)
+        d⃰[k] = phase2_jump_kai(A, Wᶜ, k, n)
     end
 
     # Phase 3
@@ -226,21 +227,25 @@ end
     l = Matrix{T}(undef, m, n)
 
     for k = 1:n
-        (μₖ⃰, l⃰) = phase3_jump(A, Wᶜ, d⃰[k], k, n)
+        (tₖ⃰, L⃰) = phase3_jump_kai(A, Wᶜ, d⃰[k], k, n)
 
         for i = 1:n
-            lᵢ⃰ = l⃰[i]
+            lᵢ⃰ = L⃰[i]/tₖ⃰
             wᵢᶜ = Wᶜ[i,k]
             if i==k
-                wᴸᵢ = (1-μₖ⃰ ) - lᵢ⃰
-                wᵁᵢ = (1-μₖ⃰ ) + lᵢ⃰
-                centers[i, k] = (1-μₖ⃰ )
+                wᴸᵢ = 1/tₖ⃰ - lᵢ⃰
+                wᵁᵢ = 1/tₖ⃰ + lᵢ⃰
+                centers[i, k] = 1/tₖ⃰
                 l[i, k] = lᵢ⃰
 
             else
-                wᴸᵢ = μₖ⃰ *wᵢᶜ - lᵢ⃰
-                wᵁᵢ = μₖ⃰ *wᵢᶜ + lᵢ⃰
-                centers[i, k] = μₖ⃰ *wᵢᶜ
+                wᴸᵢ = (1-1/tₖ⃰)*wᵢᶜ - lᵢ⃰
+                wᵁᵢ = (1-1/tₖ⃰)*wᵢᶜ + lᵢ⃰
+                # println(tₖ⃰)
+                centers[i, k] = (1-1/tₖ⃰)*wᵢᶜ
+                # wᴸᵢ = wᵢᶜ - lᵢ⃰
+                # wᵁᵢ = wᵢᶜ + lᵢ⃰
+                # centers[i, k] = wᵢᶜ
                 l[i, k] = lᵢ⃰
             end
             # 各kの時の推定値を縦ベクトルとして格納
@@ -256,8 +261,8 @@ end
     W̅̅ = Vector{Interval{T}}(undef, n)
 
     for i = 1:n
-        w̅̅ᴸ[i] = minimum(wᴸ[i, :])
-        w̅̅ᵁ[i] = maximum(wᵁ[i, :])
+        w̅̅ᴸ[i] = mean(wᴸ[i, :])
+        w̅̅ᵁ[i] = mean(wᵁ[i, :])
 
         # precision error 対応
         if w̅̅ᴸ[i] > w̅̅ᵁ[i]
@@ -266,18 +271,11 @@ end
         
     end
 
-    w_c = sum(w̅̅ᴸ.+ w̅̅ᵁ)/2
-
-    w̅̅ᴸ = w̅̅ᴸ ./ w_c
-    w̅̅ᵁ = w̅̅ᵁ ./ w_c
     for i = 1:n
         W̅̅[i] = (w̅̅ᴸ[i])..(w̅̅ᵁ[i])
     end
 
-
     return (
-        s=w_c,
-        centers=centers, l=l,
         wᴸ=w̅̅ᴸ, wᵁ=w̅̅ᵁ,
         W=W̅̅
     )
