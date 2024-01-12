@@ -8,13 +8,10 @@ include("./nearly-equal.jl")
 include("./solve-deterministic-ahp.jl")
 
 
-MMRE_Individual_kai = @NamedTuple{
+LPResult_Individual = @NamedTuple{
     # 区間重みベクトル
-    s::T,
-    centers::Matrix{T},
-    l::Matrix{T},
     wᴸ::Vector{T}, wᵁ::Vector{T},
-    W::Vector{Interval{T}} # ([wᵢᴸ, wᵢᵁ])
+    W::Vector{Interval{T}}, # ([wᵢᴸ, wᵢᵁ])
 } where {T <: Real}
 
 # 任意の行と列を削除
@@ -203,7 +200,7 @@ phase3_jump_result_kai = @NamedTuple{
 end
 
 # 提案手法 MMR-E, MMR-G, MMR-A
-@inline function MMR_kai(A::Matrix{T}, method::Function)::MMRE_Individual_kai{T} where {T <: Real}
+@inline function AMR_kai(A::Matrix{T}, method::Function)::LPResult_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
