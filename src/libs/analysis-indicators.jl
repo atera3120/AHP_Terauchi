@@ -87,11 +87,12 @@ end
     diff = 0.0
 
     for i in 1:n
-        diff += abs( (sup(T[i])+inf(T[i]))/2 -E[i] )
+        diff += ( (sup(T[i])+inf(T[i]))/2 -E[i] )^2
         if E[i] in T[i]
             cnt += 1
         end
     end
+    euclid = sqrt(diff)
     
-    return cnt/n, diff/n
+    return cnt, euclid
 end
