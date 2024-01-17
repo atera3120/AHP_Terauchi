@@ -1,4 +1,5 @@
 using DataFrames
+using Statistics
 include("./crisp-pcm.jl")
 
 # データフレームを分割する関数
@@ -79,20 +80,24 @@ end
 end
 
 # crispな推定値がTの範囲に含まれているか
-# 区間の中央値との距離
 @inline function est_in_range(T, E)
     n = length(E)
-    
     cnt = 0
-    diff = 0.0
-
     for i in 1:n
-        diff += ( (sup(T[i])+inf(T[i]))/2 -E[i] )^2
         if E[i] in T[i]
             cnt += 1
         end
-    end
-    euclid = sqrt(diff)
-    
-    return cnt, euclid
+    end 
+    return cnt
+end
+
+# intervalの中心を計算する
+@inline function interval_centers(intervals::Vector{Interval{Float64}})::Vector{Float64}
+    return [(inf(interval) + sup(interval)) / 2 for interval in intervals]
+end
+
+# 2つのベクトルのユークリッド距離を計算する
+@inline function calculate_euclidean(v1, v2)
+    dist = sqrt(sum((v1 .- v2).^2))
+    return dist
 end
