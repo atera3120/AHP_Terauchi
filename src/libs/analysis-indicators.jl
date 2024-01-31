@@ -101,3 +101,8 @@ end
     dist = sqrt(sum((v1 .- v2).^2))
     return dist
 end
+
+@inline function calculate_manhattan(v1, v2)
+    dist =  sum(abs.(v1.-v2))
+    return dist
+end
