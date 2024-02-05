@@ -1,13 +1,14 @@
 using IntervalArithmetic
 using JuMP
 import HiGHS
+using Statistics
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
 include("./solve-deterministic-ahp.jl")
 
 
-MMRW_Individual = @NamedTuple{
+AMRW_Individual = @NamedTuple{
     # 区間重みベクトル
     centers::Array{T},
     l::Matrix{T},
@@ -16,7 +17,7 @@ MMRW_Individual = @NamedTuple{
 } where {T <: Real}
 
 # Phase2のループの中の部分
-@inline function phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
+@inline function AMRW_phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -64,7 +65,7 @@ MMRW_Individual = @NamedTuple{
 end
 
 # Phase3のループの中の部分
-@inline function phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
+@inline function AMRW_phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
     ε = 1e-8 # << 1
 
     model = Model(HiGHS.Optimizer)
@@ -113,7 +114,7 @@ end
     end
 end
 
-@inline function MMR_W(A::Matrix{T}, method::Function)::MMRW_Individual{T} where {T <: Real}
+@inline function AMR_W(A::Matrix{T}, method::Function)::AMRW_Individual{T} where {T <: Real}
 
     if !isCrispPCM(A)
         throw(ArgumentError("A is not a crisp PCM"))
@@ -128,7 +129,7 @@ end
     # Phase 2
     d̂ = Vector{T}(undef, n) 
     for k = 1:n
-        d̂[k] = phase2_jump(A, Wᶜ, k, n)
+        d̂[k] = AMRW_phase2_jump(A, Wᶜ, k, n)
     end
 
     # Phase 3
@@ -136,7 +137,7 @@ end
     wᵁ = Matrix{T}(undef, m, n)
     l̂ = Matrix{T}(undef, m, n) 
     for k = 1:n
-        l = phase3_jump(A, Wᶜ, d̂[k], k, n)
+        l = AMRW_phase3_jump(A, Wᶜ, d̂[k], k, n)
         for j = 1:n
             l̂[j, k] = l[j]
         end
@@ -149,8 +150,8 @@ end
 
     for i = 1:n
         wᵢᶜ = Wᶜ[i]
-        w̅̅ᴸ[i] = wᵢᶜ - maximum(l̂[i, :])
-        w̅̅ᵁ[i] = wᵢᶜ + maximum(l̂[i, :])
+        w̅̅ᴸ[i] = wᵢᶜ - mean(l̂[i, :])
+        w̅̅ᵁ[i] = wᵢᶜ + mean(l̂[i, :])
 
         # precision error 対応
         if w̅̅ᴸ[i] > w̅̅ᵁ[i]

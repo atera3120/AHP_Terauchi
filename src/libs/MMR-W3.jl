@@ -150,7 +150,7 @@ end
     for i = 1:n
         wᵢᶜ = Wᶜ[i]
         w̅̅ᴸ[i] = wᵢᶜ - maximum(l̂[i, :])
-        w̅̅ᵁ[i] = wᵢᶜ + maximum(l̂[i, :]) # ここはminimumじゃないくていいのか？maxにしたらE-MMR-Wの結果と完全に一致している
+        w̅̅ᵁ[i] = wᵢᶜ + maximum(l̂[i, :])
 
         # precision error 対応
         if w̅̅ᴸ[i] > w̅̅ᵁ[i]
