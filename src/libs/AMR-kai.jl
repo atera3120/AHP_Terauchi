@@ -1,6 +1,7 @@
 using IntervalArithmetic
 using JuMP
 import HiGHS
+using Statistics
 
 using Plots
 include("./crisp-pcm.jl")

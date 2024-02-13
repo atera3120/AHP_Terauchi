@@ -1,6 +1,7 @@
 using IntervalArithmetic
 using JuMP
 import HiGHS
+using Statistics
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
