@@ -1,3 +1,7 @@
+"""
+精度計算などに用いる諸々の関数
+"""
+
 using DataFrames
 using Statistics
 include("./crisp-pcm.jl")

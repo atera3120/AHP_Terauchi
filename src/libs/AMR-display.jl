@@ -1,3 +1,8 @@
+"""
+提案法eAMRw, gAMRw, lAMRw
+各モデルの最適化結果観察用
+"""
+
 using IntervalArithmetic
 using JuMP
 import HiGHS

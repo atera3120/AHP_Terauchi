@@ -1,3 +1,8 @@
+"""
+提案法eMMRw/c, gMMRw/c, lMMRw/c
+MMR_kai(PCM, method)とすることで，区間重要度が求められる．
+"""
+
 using IntervalArithmetic
 using JuMP
 import HiGHS

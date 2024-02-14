@@ -1,3 +1,8 @@
+"""
+従来法E-AMRw, G-AMRw, L-AMRw
+各モデルの最適化結果観察用
+"""
+
 using IntervalArithmetic
 using JuMP
 import HiGHS

@@ -1,4 +1,8 @@
-# 中心推定のアルゴリズム3種
+"""
+中心推定のアルゴリズム3種
+EV法，GM法，LM法
+"""
+
 using IntervalArithmetic
 using LinearAlgebra
 using JuMP
@@ -6,6 +10,44 @@ import HiGHS
 
 include("./crisp-pcm.jl")
 include("./nearly-equal.jl")
+
+# EV(Eigen Value)法
+@inline function EV(A::Matrix{T})::Array{T} where {T <: Real}
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    eigen_result = eigen(A)
+    idxₘₐₓ = argmax(real(eigen_result.values))
+    vₘₐₓ = eigen_result.vectors[:, idxₘₐₓ]
+
+    return W = vₘₐₓ / sum(vₘₐₓ)
+
+end
+
+# GM(Geometric Mean)法
+@inline function GM(A::Matrix{T})::Array{T} where {T <: Real}
+    m, n = size(A)
+
+    if !isCrispPCM(A)
+        throw(ArgumentError("A is not a crisp PCM"))
+    end
+
+    S = 0
+    for i = 1:n
+        S += prod(A[i, :])^(1/n)
+    end
+
+    w = similar(A, T, n)
+    for i = 1:n
+        w[i] = prod(A[i, :])^(1/n) / S
+    end
+
+    return W = w
+
+end   
+
 
 # LM(Logarithmic Median)法
 @inline function LM(A::Matrix{T})::Array{T} where {T <: Real}
@@ -47,40 +89,3 @@ include("./nearly-equal.jl")
         empty!(model)    
     end
 end
-
-# EV(Eigen Value)法
-@inline function EV(A::Matrix{T})::Array{T} where {T <: Real}
-
-    if !isCrispPCM(A)
-        throw(ArgumentError("A is not a crisp PCM"))
-    end
-
-    eigen_result = eigen(A)
-    idxₘₐₓ = argmax(real(eigen_result.values))
-    vₘₐₓ = eigen_result.vectors[:, idxₘₐₓ]
-
-    return W = vₘₐₓ / sum(vₘₐₓ)
-
-end
-
-# GM(Geometric Mean)法
-@inline function GM(A::Matrix{T})::Array{T} where {T <: Real}
-    m, n = size(A)
-
-    if !isCrispPCM(A)
-        throw(ArgumentError("A is not a crisp PCM"))
-    end
-
-    S = 0
-    for i = 1:n
-        S += prod(A[i, :])^(1/n)
-    end
-
-    w = similar(A, T, n)
-    for i = 1:n
-        w[i] = prod(A[i, :])^(1/n) / S
-    end
-
-    return W = w
-
-end   

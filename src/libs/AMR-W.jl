@@ -1,3 +1,8 @@
+"""
+従来法E-AMRw, G-AMRw, L-AMRw
+AMR_W(PCM, method)とすることで，区間重要度が求められる．
+"""
+
 using IntervalArithmetic
 using JuMP
 import HiGHS
