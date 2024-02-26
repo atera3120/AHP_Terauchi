@@ -23,7 +23,7 @@ AMRW_Individual = @NamedTuple{
 
 # Phase2のループの中の部分
 @inline function AMRW_phase2_jump(A::Matrix{T}, Wᶜ::Vector{T}, k::Int, n::Int)::T where {T <: Real}
-    ε = 1e-8 # << 1
+    ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
@@ -71,7 +71,7 @@ end
 
 # Phase3のループの中の部分
 @inline function AMRW_phase3_jump(A::Matrix{T}, Wᶜ::Vector{T}, d̂::T, k::Int, n::Int)::Vector{T} where {T <: Real}
-    ε = 1e-8 # << 1
+    ε = 1e-6 # << 1
 
     model = Model(HiGHS.Optimizer)
     set_silent(model)
